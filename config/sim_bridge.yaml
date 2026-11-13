@@ -1,0 +1,36 @@
+# Parametri cvora sim_bridge (robot_bridge za simulaciju). Teme su apsolutne: /robot<robot_id>/...
+/**:
+  ros__parameters:
+    robot_id: 10
+    ball_id: 0               # poza kugle s "kamere": /b<ball_id>/pose
+    rate_hz: 50.0
+    cmd_timeout: 1.0
+    pose_timeout: 0.5
+    telem_timeout: 0.5
+    speed_target_timeout: 0.5
+    roll_target_timeout: 0.5
+
+    # petlja brzine: gas = u0 + k_ff * v_ref + PI(v_ref - v), u [0, vx_max]
+    # NA ROBOTU: kp 0.15, ki 0.1, k_ff 0.0. U simulaciji s tim pojacanjima petlja raspiruje
+    # mod ljuljanja (2.5 s) i postaje nestabilna; ova su stabilna (do 90 % za ~2 s).
+    speed_kp: 0.01
+    speed_ki: 0.03
+    speed_kd: 0.0
+    k_ff_speed: 0.15
+    u0_speed: 0.05
+    vx_max: 0.20
+
+    # nagib (kao na robotu)
+    roll_kp: 0.012
+    roll_ki: 0.0
+    roll_kd: 0.001
+    max_roll_rate: 20.0      # deg/s, rampa za rucni roll_target
+    roll_filter: 0.15
+
+    # smjer (kao na robotu); yaw_loop: false -> nagib se drzi na 0 (ili roll_target)
+    yaw_loop: false
+    yaw_kp: 0.45
+    yaw_ki: 0.0
+    yaw_kd: 0.08
+    roll_limit: 25.0
+    yaw_invert: false

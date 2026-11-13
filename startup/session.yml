@@ -1,0 +1,48 @@
+name: mujoco_simulation
+root: /ws
+startup_window: mujoco
+pre_window: |
+  source /ws/install/setup.bash
+
+windows:
+  - mujoco:
+      layout: tiled
+      panes:
+        - ros2 launch sphero_simulation sim.launch.py model:=sphere world:=arena viewer:=true yaw_loop:=true yaw_offset:=0 x0:=-1.08 y0:=-0.60 yaw0:=0
+
+        - sleep 6; rviz2 -d /ws/src/sphero_simulation/config/simulation_rviz.rviz
+        - ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map world
+
+  # - wall_bounce:
+  #     layout: tiled
+  #     panes: 
+  #       - sleep 10; ros2 run oak_sphero bouncing_driver
+  #       - sleep 12; ros2 run oak_sphero wall_bounce_corners
+  #       - 'ros2 topic pub -r 10 /people_stop std_msgs/msg/Bool "{data: false}"'
+
+  #       - ros2 run sphero_simulation sim_pose_viz
+  #       - ros2 run oak_sphero map_visualizer
+
+  - follow_target:
+      layout: tiled
+      panes:
+        - ros2 run sphero_simulation follow_target --ros-args -p follow_distance:=1.0
+        - history -s  ros2 run sphero_simulation moving_point --ros-args -p mode:=circle -p radius:=1.5 -p speed:=0.2
+        
+  - control:
+      layout: tiled
+      panes:
+        # petlja brzine: referenca mora stalno stizati (timeout 0.5 s) -> -r 10
+        - >-
+          history -s 'ros2 topic pub -r 10 /robot5/speed_target std_msgs/msg/Float32 "{data: 0.25}"'
+        # smjer [deg] (yaw_loop:=true); dovoljno jednom, ostaje zapamcen
+        - >-
+          history -s 'ros2 topic pub -1 /robot5/yaw_target std_msgs/msg/Float32 "{data: 30.0}"'
+        # rucni nagib [deg] dok stize (ima prednost pred yaw petljom)
+        - >-
+          history -s 'ros2 topic pub -r 10 /robot5/roll_target std_msgs/msg/Float32 "{data: 15.0}"'
+        # otvorena petlja: gas izravno (timeout 1 s)
+        - >-
+          history -s 'ros2 topic pub -r 10 /robot5/cmd_vx std_msgs/msg/Float32 "{data: 0.09}"'
+        - >-
+          history -s 'ros2 topic echo /robot5/speed_fwd'

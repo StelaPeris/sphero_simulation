@@ -1,0 +1,27 @@
+<mujoco model="world_arena">
+  <!-- SVIJET za modele kugle (models/sphere/*.xml ga ukljucuju s <include>). GENERIRANO: tools/build.py.
+       Smije sadrzavati samo okolinu: pod, zidove, prepreke, svjetla, teksture. Ishodiste = world koordinatni sustav. -->
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".95 .96 .98" rgb2=".70 .75 .82" width="512" height="3072"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".92 .92 .92" rgb2=".82 .82 .82" width="300" height="300" mark="edge" markrgb=".65 .65 .65"/>
+    <material name="grid" texture="grid" texrepeat="10 10" texuniform="true" reflectance=".05"/>
+  </asset>
+  <worldbody>
+    <light pos="0 0 4" dir="0 0 -1" diffuse=".7 .7 .7" castshadow="false"/>
+    <light pos="1 -1 2" dir="-1 1 -2" diffuse=".4 .4 .4"/>
+    <!-- pod (beton). size = POLA sirine/duljine prikaza [m]; za kontakt je ravnina ionako beskonacna.
+         friction = klizno, torzijsko [m], kotrljanje [m] -->
+    <geom name="floor" type="plane" size="25 25 0.1" material="grid" contype="1" conaffinity="1"
+          condim="6" friction="0.8 0.005 0" solref="0.004 1"/>
+    <!-- arena: zidovi oko X u [-2.4, 2.4], Y u [-3.04, 3.04] m (visina 0.25 m - pretpostavka) -->
+    <geom name="wall_xp" type="box" pos="2.425 0 0.125" size="0.025 3.09 0.125" rgba=".55 .6 .68 1" contype="1" conaffinity="1" condim="3" friction="0.6 0.005 0"/>
+    <geom name="wall_xn" type="box" pos="-2.425 0 0.125" size="0.025 3.09 0.125" rgba=".55 .6 .68 1" contype="1" conaffinity="1" condim="3" friction="0.6 0.005 0"/>
+    <geom name="wall_yp" type="box" pos="0 3.065 0.125" size="2.4 0.025 0.125" rgba=".55 .6 .68 1" contype="1" conaffinity="1" condim="3" friction="0.6 0.005 0"/>
+    <geom name="wall_yn" type="box" pos="0 -3.065 0.125" size="2.4 0.025 0.125" rgba=".55 .6 .68 1" contype="1" conaffinity="1" condim="3" friction="0.6 0.005 0"/>
+    <!-- world koordinatni sustav (samo prikaz): x crvena, y zelena, z plava, duljina 0.5 m -->
+    <geom name="world_x" type="capsule" fromto="0 0 0.003 0.5 0 0.003" size="0.008" rgba="1 0 0 1"/>
+    <geom name="world_y" type="capsule" fromto="0 0 0.003 0 0.5 0.003" size="0.008" rgba="0 .8 0 1"/>
+    <geom name="world_z" type="capsule" fromto="0 0 0.003 0 0 0.5" size="0.008" rgba="0 0 1 1"/>
+    <geom name="world_origin" type="sphere" pos="0 0 0.003" size="0.02" rgba=".1 .1 .1 1"/>
+  </worldbody>
+</mujoco>

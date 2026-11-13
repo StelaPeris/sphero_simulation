@@ -1,0 +1,83 @@
+<mujoco model="sphere">
+  <!-- GENERIRANO: tools/build.py iz IsThisLife_Robot_V3.5+Shell.step. Ne uredjivati rucno.
+       Mase: baterije 4 x 652 g, motor 340 g i servo 2 x 60 g (PRETPOSTAVKA), celik 7.85 g/cm3,
+       ostali dijelovi skalirani na izvaganu masu njihala s osovinom (4594.9 g).
+       KALIBRACIJA: tezište nagibnog dijela spusteno za 12.4 mm, L = 64 mm (CAD 54.8 mm); vidi L_TARGET u massprops.py.
+       Ljuska: izvagane polovice 6914.9 g = printana ljuska iz CAD-a (PLA 1.24 g/cm3, do r = 174.2 mm)
+       + keramicki sloj 174.2-185 mm (ostatak mase, jednoliko). -->
+  <compiler angle="radian" meshdir="meshes" autolimits="true" inertiafromgeom="false"/>
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81" cone="elliptic" impratio="10"/>
+  <visual>
+    <global offwidth="1600" offheight="1000"/>
+    <headlight ambient=".35 .35 .35" diffuse=".55 .55 .55" specular=".1 .1 .1"/>
+    <rgba haze=".85 .88 .92 1"/>
+  </visual>
+  <default><geom contype="0" conaffinity="0" group="1"/></default>
+  <asset>
+
+    <mesh name="hub_motor" file="hub_motor.stl" inertia="shell"/>
+    <mesh name="hub_print" file="hub_print.stl" inertia="shell"/>
+    <mesh name="hub_steel" file="hub_steel.stl" inertia="shell"/>
+    <mesh name="shell_al" file="shell_al.stl" inertia="shell"/>
+    <mesh name="shell_print" file="shell_print.stl" inertia="shell"/>
+    <mesh name="shell_shell_lower" file="shell_shell_lower.stl" inertia="shell"/>
+    <mesh name="shell_shell_mount" file="shell_shell_mount.stl" inertia="shell"/>
+    <mesh name="shell_shell_upper" file="shell_shell_upper.stl" inertia="shell"/>
+    <mesh name="tilt_battery" file="tilt_battery.stl" inertia="shell"/>
+    <mesh name="tilt_elec" file="tilt_elec.stl" inertia="shell"/>
+    <mesh name="tilt_print" file="tilt_print.stl" inertia="shell"/>
+    <mesh name="tilt_servo" file="tilt_servo.stl" inertia="shell"/>
+    <mesh name="tilt_steel" file="tilt_steel.stl" inertia="shell"/>
+  </asset>
+  <!-- SVIJET (pod, zidovi, svjetla) je u zasebnoj datoteci; sim_node ga mijenja parametrom world:=<ime> -->
+  <include file="../worlds/arena.xml"/>
+  <worldbody>
+    <!-- ljuska (s osovinom i nosacima) -->
+    <body name="shell" pos="0 0 0.185" quat="0.7071068 0 0 -0.7071068">
+      <freejoint name="root"/>
+      <inertial pos="-0.00009 0.00000 -0.00000" mass="7.0112" fullinertia="0.142172 0.144723 0.145885 -9.5767e-06 3.22899e-07 -4.79243e-10"/>
+      <geom name="shell_contact" type="sphere" size="0.185" contype="1" conaffinity="1" condim="6"
+            friction="0.8 0.005 0" rgba="1 1 1 0.12" group="2"/>
+      <geom type="mesh" mesh="shell_al" rgba=".75 .75 .78 1"/>
+      <geom type="mesh" mesh="shell_print" rgba=".85 .15 .15 1"/>
+      <geom type="mesh" mesh="shell_shell_lower" rgba=".9 .25 .25 1"/>
+      <geom type="mesh" mesh="shell_shell_mount" rgba=".85 .15 .15 1"/>
+      <geom type="mesh" mesh="shell_shell_upper" rgba=".9 .25 .25 1" group="0"/>
+      <site name="shell_imu" pos="0 0 0"/>
+      <!-- glavcina: motor 5065 + cikloidni reduktor + stozasti zupcanik, rotira oko osovine (x) -->
+      <body name="hub">
+        <joint name="drive" type="hinge" axis="1 0 0"/>
+        <inertial pos="0.00032 -0.00092 -0.03919" mass="1.0990" fullinertia="0.00301743 0.00312101 0.00128761 1.55928e-05 -7.47431e-06 4.2584e-05"/>
+        <geom type="mesh" mesh="hub_motor" rgba=".25 .25 .3 1"/>
+        <geom type="mesh" mesh="hub_print" rgba=".85 .15 .15 1"/>
+        <geom type="mesh" mesh="hub_steel" rgba=".7 .7 .72 1"/>
+        <site name="main_imu" pos="0 0 0.035"/>
+        <!-- nagibni dio: bocne ploce, 4 baterije, 2 servo motora; okrece se oko osi y (lezaj 40x52) -->
+        <body name="tilt">
+          <joint name="servo" type="hinge" axis="0 1 0" range="-0.6 0.6"/>
+          <inertial pos="-0.00053 -0.00062 -0.07383" mass="3.3996" fullinertia="0.0210155 0.0115337 0.0211528 -0.000523813 0.000124688 0.000140933"/>
+          <geom type="mesh" mesh="tilt_battery" rgba=".15 .15 .15 1"/>
+          <geom type="mesh" mesh="tilt_elec" rgba=".1 .4 .15 1"/>
+          <geom type="mesh" mesh="tilt_print" rgba=".85 .15 .15 1"/>
+          <geom type="mesh" mesh="tilt_servo" rgba=".1 .1 .1 1"/>
+          <geom type="mesh" mesh="tilt_steel" rgba=".7 .7 .72 1"/>
+          <site name="pend_imu" pos="0 0.05 0.02"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <!-- momenti kao u radu: gear=-1 -> +u djeluje na ljusku/osovinu, -u na njihalo (B = [1, -1]) -->
+    <motor name="u_x" joint="drive" gear="-1" ctrlrange="-2.5 2.5"/>
+    <motor name="u_y" joint="servo" gear="-1" ctrlrange="-2.4 2.4"/>
+  </actuator>
+  <sensor>
+    <jointpos name="gamma" joint="servo"/>
+    <jointvel name="omega_x" joint="drive"/>
+    <framequat name="shell_q" objtype="site" objname="shell_imu"/>
+    <framequat name="main_q" objtype="site" objname="main_imu"/>
+    <framequat name="pend_q" objtype="site" objname="pend_imu"/>
+    <framepos name="shell_pos" objtype="body" objname="shell"/>
+    <framelinvel name="shell_v" objtype="body" objname="shell"/>
+  </sensor>
+</mujoco>

@@ -1,0 +1,69 @@
+<mujoco model="pendulum_bench">
+  <!-- GENERIRANO: tools/make_bench.py iz pendulum_drive.xml. Njihalo ucvrsceno za stol, okrece se osovina.
+       armature 0.01 kg m2 na zglobu drive: tromost rotora kroz reduktor - PRETPOSTAVKA (osovina sama ima ~1e-5).
+       ESC kv = 0.5 (vremenska konstanta 20 ms). -->
+  <compiler angle="radian" meshdir="meshes" autolimits="true" inertiafromgeom="false" />
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81" />
+  <visual>
+    <global offwidth="1600" offheight="1000" />
+    <headlight ambient=".35 .35 .35" diffuse=".55 .55 .55" specular=".1 .1 .1" />
+    <rgba haze=".85 .88 .92 1" />
+  </visual>
+  <default>
+    <geom contype="0" conaffinity="0" group="1" />
+  </default>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".95 .96 .98" rgb2=".70 .75 .82" width="512" height="3072" />
+    <texture name="grid" type="2d" builtin="checker" rgb1=".92 .92 .92" rgb2=".82 .82 .82" width="300" height="300" mark="edge" markrgb=".65 .65 .65" />
+    <material name="grid" texture="grid" texrepeat="10 10" texuniform="true" reflectance=".05" />
+    <mesh name="hub_motor" file="hub_motor.stl" inertia="shell" />
+    <mesh name="hub_print" file="hub_print.stl" inertia="shell" />
+    <mesh name="hub_steel" file="hub_steel.stl" inertia="shell" />
+    <mesh name="shell_al" file="shell_al.stl" inertia="shell" />
+    <mesh name="shell_print" file="shell_print.stl" inertia="shell" />
+    <mesh name="tilt_battery" file="tilt_battery.stl" inertia="shell" />
+    <mesh name="tilt_elec" file="tilt_elec.stl" inertia="shell" />
+    <mesh name="tilt_print" file="tilt_print.stl" inertia="shell" />
+    <mesh name="tilt_servo" file="tilt_servo.stl" inertia="shell" />
+    <mesh name="tilt_steel" file="tilt_steel.stl" inertia="shell" />
+  </asset>
+  <worldbody>
+    <light pos="0.3 -0.6 0.8" dir="-0.3 0.6 -0.8" diffuse=".8 .8 .8" />
+    <geom name="floor_vis" type="plane" pos="0 0 -0.185" size="1 1 0.01" material="grid" />
+    <body name="hub">
+      <inertial pos="0.00032 -0.00092 -0.03919" mass="1.0990" fullinertia="0.00301743 0.00312101 0.00128761 1.55928e-05 -7.47431e-06 4.2584e-05" />
+      <geom type="mesh" mesh="hub_motor" rgba=".25 .25 .3 1" />
+      <geom type="mesh" mesh="hub_print" rgba=".85 .15 .15 1" />
+      <geom type="mesh" mesh="hub_steel" rgba=".7 .7 .72 1" />
+      <site name="main_imu" pos="0 0 0.035" />
+      <body name="shaft">
+        <joint name="drive" type="hinge" axis="-1 0 0" armature="0.01" />
+        <inertial pos="-0.00641 -0.00000 0.00004" mass="0.0963" fullinertia="6.15906e-06 0.000637477 0.000637614 -1.46549e-11 7.40016e-08 -1.81066e-12" />
+        <geom type="mesh" mesh="shell_al" rgba=".75 .75 .78 1" />
+        <geom type="mesh" mesh="shell_print" rgba=".85 .15 .15 1" />
+        <geom type="box" pos="0.12 0 0.008" size="0.012 0.003 0.004" rgba="1 .8 0 1" mass="0" />
+        <geom type="box" pos="-0.12 0 0.008" size="0.012 0.003 0.004" rgba="1 .8 0 1" mass="0" />
+      </body>
+      <body name="tilt">
+        <joint name="servo" type="hinge" axis="0 1 0" range="-0.6 0.6" />
+        <inertial pos="-0.00053 -0.00062 -0.07383" mass="3.3996" fullinertia="0.0210155 0.0115337 0.0211528 -0.000523813 0.000124688 0.000140933" />
+        <geom type="mesh" mesh="tilt_battery" rgba=".15 .15 .15 1" />
+        <geom type="mesh" mesh="tilt_elec" rgba=".1 .4 .15 1" />
+        <geom type="mesh" mesh="tilt_print" rgba=".85 .15 .15 1" />
+        <geom type="mesh" mesh="tilt_servo" rgba=".1 .1 .1 1" />
+        <geom type="mesh" mesh="tilt_steel" rgba=".7 .7 .72 1" />
+        <site name="pend_imu" pos="0 0.05 0.02" />
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <velocity name="esc" joint="drive" kv="0.5" ctrlrange="-6 6" forcerange="-10 10" />
+    <velocity name="servo" joint="servo" kv="300" ctrlrange="-1.5 1.5" forcerange="-2.45 2.45" />
+  </actuator>
+  <sensor>
+    <jointpos name="gamma" joint="servo" />
+    <jointvel name="omega_x" joint="drive" />
+    <framequat name="main_q" objtype="site" objname="main_imu" />
+    <framequat name="pend_q" objtype="site" objname="pend_imu" />
+  </sensor>
+</mujoco>
